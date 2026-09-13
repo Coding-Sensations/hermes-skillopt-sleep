@@ -64,13 +64,13 @@ def _execute(args, cfg):
             "adoption_eligible": False, "reason": "mock_backend"}
 
 
-def run(args):
+def run_result(args):
     try:
         cfg = configuration(args)
         action = args.skillopt_sleep_action or "status"
         if action in {"run", "adopt"}:
             from filelock import FileLock, Timeout
-            lock_path = Path(cfg.invoked_project) / ".skillopt-sleep/hermes.lock"
+            lock_path = Path(cfg.state_dir) / "hermes.lock"
             lock_path.parent.mkdir(parents=True, exist_ok=True)
             try:
                 with FileLock(str(lock_path), timeout=0):
@@ -79,13 +79,22 @@ def run(args):
                 raise RuntimeError("A SkillOpt run or adoption already owns this project.") from exc
         else:
             payload = _execute(args, cfg)
-        print(json.dumps(payload, ensure_ascii=False, indent=2) if args.json else f"[skillopt-sleep] {json.dumps(payload, ensure_ascii=False)}")
-        return 0
+        return 0, payload
     except (RuntimeError, ValueError, OSError) as exc:
         from .hermes_source import _safe_text
         try:
             message = _safe_text(str(exc))
         except RuntimeError:
             message = "Operation failed; error details withheld because redaction failed."
-        print(f"[skillopt-sleep] {message}", file=sys.stderr)
-        return 1
+        return 1, {"status": "error", "message": message}
+
+
+
+def format_result(payload, *, pretty=False):
+    return json.dumps(payload, ensure_ascii=False, indent=2 if pretty else None)
+
+
+def run(args):
+    code, payload = run_result(args)
+    print(format_result(payload, pretty=args.json), file=sys.stderr if code else sys.stdout)
+    return code

@@ -1,6 +1,7 @@
 ---
 name: skillopt-sleep
-description: "Inspect Hermes session-derived tasks and staged SkillOpt proposals."
+description: "Inspect session-derived tasks and staged proposals."
+author: "Mike DeMott (mrkillbob)"
 version: 0.2.0
 license: MIT
 platforms: [linux, macos, windows]

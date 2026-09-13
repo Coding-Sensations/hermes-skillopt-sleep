@@ -1,0 +1,25 @@
+name: Plugin tests
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          path: plugin
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          repository: mrkillbob/hermes-agent
+          ref: ce73e3c5b95413cede9bc47687926527b966e303
+          path: hermes
+      - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+      - name: Install pinned Hermes and real SkillOpt engine
+        working-directory: hermes
+        run: |
+          uv sync --locked --python 3.13 --extra dev
+          uv pip install --python .venv/bin/python -r ../plugin/requirements.txt
+      - name: Run plugin discovery and behavioral tests
+        working-directory: plugin
+        run: HERMES_SOURCE="$GITHUB_WORKSPACE/hermes" HERMES_PYTHON="$GITHUB_WORKSPACE/hermes/.venv/bin/python" scripts/run_tests.sh

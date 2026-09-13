@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import re
 import sqlite3
+import subprocess
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -96,6 +97,23 @@ def _feedback(prompts: Iterable[str]) -> list[str]:
     return values
 
 
+def canonical_project(project: str) -> str:
+    """Match Hermes session workspace identity without changing process cwd."""
+    path = Path(project).expanduser().resolve()
+    if not path.is_dir():
+        raise ValueError("The selected project must be an existing directory.")
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(path), "rev-parse", "--show-toplevel"],
+            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=5,
+        )
+    except FileNotFoundError:
+        return str(path)
+    if result.returncode == 0 and result.stdout.strip():
+        return str(Path(result.stdout.strip()).resolve())
+    return str(path)
+
+
 def harvest_hermes(*, project: str = "", limit: int = 40, lookback_hours: int = 72) -> list[Any]:
     """Return SkillOpt ``SessionDigest`` objects from the active Hermes profile."""
     from hermes_constants import get_hermes_home
@@ -104,7 +122,7 @@ def harvest_hermes(*, project: str = "", limit: int = 40, lookback_hours: int = 
 
     if not project:
         raise ValueError("Hermes harvesting requires an explicit project")
-    project = str(Path(project).expanduser().resolve())
+    project = canonical_project(project)
     cutoff = time.time() - max(0, int(lookback_hours or 0)) * 3600 if lookback_hours else 0
     db_path = get_hermes_home() / "state.db"
     if not db_path.exists():

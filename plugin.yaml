@@ -7,3 +7,5 @@ platforms:
   - linux
   - macos
   - windows
+python_dependencies:
+  - skillopt==0.2.0

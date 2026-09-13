@@ -2,11 +2,10 @@
 from __future__ import annotations
 
 import argparse
-import contextlib
-import io
+import asyncio
 import shlex
 
-from .runner import run
+from .runner import run, run_result, format_result
 
 _ACTIONS = ("status", "harvest", "dry-run", "run", "adopt")
 
@@ -43,17 +42,25 @@ def skillopt_sleep_command(args_or_text):
         parser = argparse.ArgumentParser(prog="skillopt-sleep")
         register_cli(parser)
         return run(parser.parse_args(["status"]))
-    output = io.StringIO()
-    with contextlib.redirect_stdout(output), contextlib.redirect_stderr(output):
-        try:
-            argv = shlex.split(args_or_text)
-            if not argv or argv[0].startswith("-"):
-                argv.insert(0, "status")
-            parser = argparse.ArgumentParser(prog="skillopt-sleep")
-            register_cli(parser)
-            code = run(parser.parse_args(argv))
-        except (ValueError, SystemExit) as exc:
-            code = exc.code if isinstance(exc, SystemExit) else 2
-            if isinstance(exc, ValueError):
-                print("Invalid command quoting.")
-    return output.getvalue().strip() or f"SkillOpt-Sleep exited with status {code}"
+    raise TypeError("Use the async slash handler for in-session commands.")
+
+
+class _SlashParser(argparse.ArgumentParser):
+    def error(self, message):
+        raise ValueError(message)
+
+
+async def skillopt_sleep_slash(text):
+    try:
+        argv = shlex.split(text)
+        if not argv or argv[0].startswith("-"):
+            argv.insert(0, "status")
+        parser = _SlashParser(prog="skillopt-sleep")
+        register_cli(parser)
+        if "--help" in argv or "-h" in argv:
+            return parser.format_help()
+        args = parser.parse_args(argv)
+    except ValueError:
+        return "Invalid SkillOpt command arguments. Use /skillopt-sleep --help."
+    _, payload = await asyncio.to_thread(run_result, args)
+    return format_result(payload, pretty=True)

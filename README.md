@@ -1,7 +1,7 @@
 # SkillOpt-Sleep for Hermes
 
 Opt-in native plugin integrating the pinned `skillopt==0.2.0` Python package.
-Install this directory under the active profile's `plugins/skillopt-sleep`,
+Clone https://github.com/mrkillbob/hermes-skillopt-sleep under the active profile's `plugins/skillopt-sleep`,
 install `requirements.txt` in the Python environment shown by
 `hermes --version-local`, then enable it:
 
@@ -12,7 +12,7 @@ hermes skillopt-sleep dry-run --project /path/to/project --json
 ```
 
 The CLI and `/skillopt-sleep` slash command share the same arguments. No core
-tools are added. The companion optional skill contains the full workflow.
+tools are added. The registered `skillopt-sleep:workflow` skill contains the full workflow.
 
 ## Current capability
 
@@ -32,14 +32,24 @@ Automatic adoption and upstream cron scheduling are not exposed.
 
 ## Development
 
-From a Hermes checkout with the optional requirements installed:
+Tested against Hermes commit `ce73e3c5b95413cede9bc47687926527b966e303`.
+Create a virtual environment, install that Hermes checkout with its dev dependencies,
+and install this repository's `requirements.txt` in the same environment. Then run:
 
 ```sh
-scripts/run_tests.sh tests/plugins/test_skillopt_sleep_plugin.py tests/plugins/test_skillopt_sleep_source.py
+HERMES_SOURCE=/path/to/hermes-agent HERMES_PYTHON=/path/to/venv/bin/python scripts/run_tests.sh
 ```
 
-Tests use temporary profiles and real SQLite stores and run the installed engine
-without network calls. Adoption gate fixtures use synthetic evaluation receipts;
-they do not qualify a live provider. Tests skip when the optional engine is absent.
+The wrapper uses Hermes's isolated test runner. Tests require the real pinned engine;
+missing dependencies fail discovery instead of skipping the suite. Tests load the
+installed plugin through `PluginManager`, use temporary profiles and real SQLite
+stores, and exercise the engine without network calls. Adoption fixtures use synthetic
+evaluation receipts and do not qualify a live provider.
 
-Upstream project: https://github.com/microsoft/SkillOpt
+Repository locks and diagnostic state live under the active profile's
+`plugin-data/skillopt-sleep`, leaving the project checkout untouched. Nested project
+paths resolve to the Git root. Slash work runs off the event loop and returns its own
+structured result without capturing process-wide output.
+
+Extracted from `mrkillbob/hermes-agent#43`, preserving the original contribution
+commit and authorship. Upstream engine: https://github.com/microsoft/SkillOpt

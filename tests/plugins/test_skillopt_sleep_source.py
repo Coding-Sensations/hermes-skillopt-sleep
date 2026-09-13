@@ -6,10 +6,9 @@ import time
 
 import pytest
 
-pytest.importorskip("skillopt_sleep")
 
 from hermes_state import SessionDB
-from plugins.skillopt_sleep.hermes_source import _safe_text, harvest_hermes
+from hermes_plugins.skillopt_sleep.hermes_source import _safe_text, harvest_hermes
 from skillopt_sleep.types import SessionDigest
 
 

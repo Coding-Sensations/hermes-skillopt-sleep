@@ -18,7 +18,8 @@ def configuration(args):
     from hermes_constants import get_hermes_home
     from skillopt_sleep.config import DEFAULTS, SleepConfig
 
-    project = Path(args.project or Path.cwd()).expanduser().resolve()
+    from .hermes_source import canonical_project
+    project = Path(canonical_project(str(args.project or Path.cwd())))
     if not project.is_dir():
         raise ValueError("The selected project must be an existing directory.")
     home = get_hermes_home()

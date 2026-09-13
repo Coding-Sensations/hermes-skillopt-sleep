@@ -28,13 +28,13 @@ def record_proposal(cfg, outcome, before_hash):
                    adopted=False)
     path = receipt_path(cfg)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2))
+    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     return payload
 
 
 def read_proposal(cfg):
     path = receipt_path(cfg)
-    return json.loads(path.read_text()) if path.is_file() else None
+    return json.loads(path.read_text(encoding="utf-8")) if path.is_file() else None
 
 
 def adopt(cfg):
@@ -110,6 +110,6 @@ def _adopt_locked(cfg, target):
         if os.path.exists(temporary):
             os.unlink(temporary)
     receipt["adopted"] = True
-    receipt_path(cfg).write_text(json.dumps(receipt, indent=2))
+    receipt_path(cfg).write_text(json.dumps(receipt, indent=2), encoding="utf-8")
     return {"status": "adopted", "target": str(target), "backup": str(backup) if backup.exists() else None,
             "effective": "next_session"}

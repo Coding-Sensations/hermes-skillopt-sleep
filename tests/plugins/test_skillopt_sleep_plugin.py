@@ -9,15 +9,14 @@ from types import SimpleNamespace
 
 import pytest
 
-pytest.importorskip("skillopt_sleep")
 
 from filelock import FileLock
 
 from hermes_state import SessionDB
-from plugins.skillopt_sleep.adoption import adopt, digest, read_proposal, record_proposal
-from plugins.skillopt_sleep.cli import register_cli
-from plugins.skillopt_sleep.configuration import configuration
-from plugins.skillopt_sleep.runner import run
+from hermes_plugins.skillopt_sleep.adoption import adopt, digest, read_proposal, record_proposal
+from hermes_plugins.skillopt_sleep.cli import register_cli
+from hermes_plugins.skillopt_sleep.configuration import configuration
+from hermes_plugins.skillopt_sleep.runner import run
 
 
 def _arguments(project, action, *extra):
