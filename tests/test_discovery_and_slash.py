@@ -32,10 +32,12 @@ def test_nested_project_harvest_and_lock_leave_checkout_unchanged(tmp_path, monk
     cfg = configuration(args)
     assert cfg.invoked_project == str(root)
     from hermes_plugins.skillopt_sleep import runner
-    monkeypatch.setattr(runner, "_execute", lambda args, cfg: {"status": "tested"})
+    def execute(args, cfg):
+        assert (Path(cfg.state_dir) / "hermes.lock").exists()
+        return {"status": "tested"}
+    monkeypatch.setattr(runner, "_execute", execute)
     before = subprocess.check_output(["git", "-C", str(root), "status", "--porcelain"])
     assert runner.run_result(args)[0] == 0
-    assert (Path(cfg.state_dir) / "hermes.lock").exists()
     assert subprocess.check_output(["git", "-C", str(root), "status", "--porcelain"]) == before
 
 
