@@ -9,4 +9,4 @@ platforms:
   - windows
 python_dependencies:
   - skillopt==0.2.0
-  - filelock==3.24.3
+  - filelock==4.2.1

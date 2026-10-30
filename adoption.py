@@ -94,10 +94,15 @@ def _adopt_locked(cfg, target):
     # Only the bound skill can change. Never trust the engine's editable manifest
     # to redirect adoption to another skill or CLAUDE.md.
     backup = staging / "hermes-backup-SKILL.md"
-    if backup.exists():
+    if backup.exists() or backup.is_symlink():
         raise ValueError("A previous adoption backup exists; inspect its incomplete result first.")
     if previous_bytes is not None:
-        backup.write_bytes(previous_bytes)
+        try:
+            # Exclusive creation also rejects a symlink placed after the check.
+            with backup.open("xb") as stream:
+                stream.write(previous_bytes)
+        except FileExistsError:
+            raise ValueError("A previous adoption backup exists; inspect its incomplete result first.") from None
     import tempfile
     fd, temporary = tempfile.mkstemp(prefix=".skillopt-", dir=target.parent)
     try:
