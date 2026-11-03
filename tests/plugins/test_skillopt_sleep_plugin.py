@@ -86,7 +86,7 @@ def test_real_mock_workflow_is_profile_scoped_and_never_adopts(tmp_path, monkeyp
 @pytest.mark.parametrize("case", [
     "success", "candidate-changed", "target-changed", "mock", "nan-candidate",
     "nan-baseline", "infinite-candidate", "no-improvement", "other-project-lock", "candidate-replaced-during-read",
-    "quoted-separator", "invalid-yaml",
+    "quoted-separator", "invalid-yaml", "backup-dangling-symlink",
 ])
 def test_adoption_uses_reviewed_bytes_finite_scores_and_shared_target_lock(tmp_path, monkeypatch, case):
     home = tmp_path / "profile"
@@ -125,6 +125,9 @@ def test_adoption_uses_reviewed_bytes_finite_scores_and_shared_target_lock(tmp_p
     outcome = SimpleNamespace(staging_dir=str(staging), report=SimpleNamespace(
         accepted=True, baseline_score=baseline, candidate_score=score))
     record_proposal(cfg, outcome, digest(target))
+    if case == "backup-dangling-symlink":
+        outside = tmp_path / "outside-backup"
+        (staging / "hermes-backup-SKILL.md").symlink_to(outside)
     if case == "candidate-changed":
         candidate.write_bytes(replacement)
     if case == "target-changed":
@@ -165,3 +168,5 @@ def test_adoption_uses_reviewed_bytes_finite_scores_and_shared_target_lock(tmp_p
     if case not in {"success", "candidate-replaced-during-read", "quoted-separator"}:
         assert target.read_bytes() == before_adoption
         assert read_proposal(cfg)["adopted"] is False
+    if case == "backup-dangling-symlink":
+        assert not outside.exists()
